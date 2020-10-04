@@ -1,6 +1,6 @@
 const dotenv = require('dotenv').config();
 const Discord = require('discord.js');
-require('./timezones');
+const zones = require('./timezones');
 
 const HOURS_TO_MILLISECONDS = 3600000;
 const MINUTES_TO_MILLISECONDS = 60000;
@@ -52,7 +52,7 @@ client.on('message', msg => {
       // Parse user args
       if (msgPieces.length === 3) { 
         timezone = msgPieces[2];
-        if (Timezones.indexOf(timezone) < 0) {
+        if (zones.Timezones.indexOf(timezone) < 0) {
           let tzUrl = "https://gist.github.com/drewstaylor/ded816531ca8632062e1fb93b30a270b";
           return msg.reply('What a strange timezone you live in, I don\'t understand ' + timezone + ' 🤔. See ' + tzUrl + ' for a list of supported timezones.');
         }
@@ -74,7 +74,7 @@ client.on('message', msg => {
           seconds = parseInt(tmpEnd[1]);
           break;
         case 3:
-          hours = arseInt(tmpEnd[0]);
+          hours = parseInt(tmpEnd[0]);
           minutes = parseInt(tmpEnd[1]);
           seconds = parseInt(tmpEnd[2]);
           break;
