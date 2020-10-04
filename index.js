@@ -33,21 +33,25 @@ client.on('message', msg => {
     let msgPieces = msg.content.split(' ');
     let end,
         rawEnd,
-        timer,
         seconds,
         minutes,
         hours,
         now = new Date(),
         timezone;
     if (msgPieces.length < 2) {
+      // Debug:
+      console.log('msgPieces less than 2');
       return msg.reply('I don\'t understand, tell me more 🤔');
     }
+
+    // Debug
+    // console.log(msgPieces);
 
     // Start worker
     try {
       // Parse user args
       if (msgPieces.length === 3) { 
-        timezone = msgPieces[3];
+        timezone = msgPieces[2];
         if (Timezones.indexOf(timezone) < 0) {
           let tzUrl = "https://gist.github.com/drewstaylor/ded816531ca8632062e1fb93b30a270b";
           return msg.reply('What a strange timezone you live in, I don\'t understand ' + timezone + ' 🤔. See ' + tzUrl + ' for a list of supported timezones.');
@@ -55,7 +59,7 @@ client.on('message', msg => {
       } else {
         timezone = false;
       }
-      rawEnd = msgPieces[2];
+      rawEnd = msgPieces[1];
       // Split arg entities
       let tmpEnd = rawEnd.split(':');
       switch (tmpEnd.length) {
@@ -75,6 +79,8 @@ client.on('message', msg => {
           seconds = parseInt(tmpEnd[2]);
           break;
         default:
+          // Debug:
+          console.log('Entities split length greater than 3');
           return msg.reply('I don\'t understand, tell me more 🤔');
       }
       // Calculate alarm end
@@ -82,23 +88,15 @@ client.on('message', msg => {
       end += hours * HOURS_TO_MILLISECONDS;
       end += minutes * MINUTES_TO_MILLISECONDS;
       end += seconds * SECONDS_TO_MILLISECONDS;
-      // Instance of timer object
-      timer = {
-        start: now,
-        end: end,
-        timezone: timezone
-      };
-    // Throw
-    } catch(e) {
-      console.log(JSON.stringify(e))
-      return msg.reply('I don\'t understand, tell me more 🤔');
-    // Parser callback
-    } finally {
-      let finished = (timer.end - timer.start);
+
+      // Alarm args
+      let start = now.getTime();
+      let finished = (end - start);
       let asSeconds = finished / SECONDS_TO_MILLISECONDS;
       let HMS = secondsToHMS(asSeconds);
       let alarmMsg = 'Timer finished in ' + HMS.h + ' hours, ' + HMS.m + ' minutes and ' + HMS.s + ' seconds.';
       let alarmResolved;
+
       if (timezone) {
         alarmResolved = new Date().toLocaleString("en-US", {timeZone: timezone});;
       } else {
@@ -112,6 +110,11 @@ client.on('message', msg => {
       // Update channel with alarm start
       let alarmCreateMsg = 'New timer started at ' + new Date().toString() + ', finishing at ' + alarmResolved;
       msg.reply(alarmCreateMsg);
+    // Throw
+    } catch(e) {
+      // Debug
+      console.log('Parser threw', e.message);
+      return msg.reply('I don\'t understand, tell me more 🤔');
     }
   }
 });
