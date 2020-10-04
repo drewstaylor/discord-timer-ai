@@ -1,7 +1,6 @@
 const dotenv = require('dotenv').config();
 const Discord = require('discord.js');
-
-import { Timezones } from './timezones';
+require('./timezones');
 
 const HOURS_TO_MILLISECONDS = 3600000;
 const MINUTES_TO_MILLISECONDS = 60000;
