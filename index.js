@@ -191,8 +191,91 @@ client.on('message', msg => {
 
   // !alarm
   if (msg.content.substring(0,6) === '!alarm') {
-    //here
-    msg.reply('TODO: this')
+    if (msg.content.indexOf('--help') !== -1) {
+      let helpReply = AlarmHelp;
+      return msg.reply(helpReply);
+    }
+    
+    let msgPieces = msg.content.split(' '),
+        alarm,
+        timer,
+        timeDiff;
+
+    if (msgPieces.length < 2) {
+      return msg.reply('I don\'t understand, tell me more 🤔');
+    }
+    
+    // Parse user args
+    if (msgPieces.length === 3) { 
+      timezone = msgPieces[2];
+      if (Timezones.indexOf(timezone) < 0) {
+        let tzUrl = "https://gist.github.com/drewstaylor/ded816531ca8632062e1fb93b30a270b";
+        return msg.reply('What a strange timezone you live in, I don\'t understand ' + timezone + ' 🤔. See ' + tzUrl + ' for a list of supported timezones.');
+      }
+    } else {
+      if (msg.content.indexOf('--timezone=') > -1) {
+        let tz = msg.content.split('--timezone=');
+        timezone = tz[1].trim();
+        msgPieces[1] = tz[0].trim();
+      } else {
+        timezone = false;
+      }
+    }
+
+    // Parse args
+    try {
+      if (!isNaN(msgPieces[1])) {
+        msgPieces[1] = parseInt(msgPieces[1]);
+      }
+      
+      // Alarm date
+      alarm = new Date(msgPieces[1]);
+      
+      // Start / end ref.
+      timer = {
+        start: new Date().getTime(),
+        end: alarm.getTime()
+      };
+
+      // End time must be forward facing
+      if (timer.start > timer.end) {
+        return msg.reply('Trouble parsing your end time, this isn\'t Back 2 the Future 3 🤔'); 
+      } else {
+        timeDiff = timer.end - timer.start;
+      }
+
+      // Alarm args
+      let asSeconds = timeDiff / SECONDS_TO_MILLISECONDS;
+      let HMS = secondsToHMS(asSeconds);
+      let alarmResolved;
+      let alarmMsg;
+      if (HMS.hasOwnProperty('d')) {
+        alarmMsg = 'Alarm finished in ' + HMS.d + ' days, ' + HMS.h + ' hours, ' + HMS.m + ' minutes and ' + HMS.s.toFixed(2) + ' seconds.';
+      } else {
+        alarmMsg = 'Alarm finished in ' + HMS.h + ' hours, ' + HMS.m + ' minutes and ' + HMS.s.toFixed(2) + ' seconds.';
+      }
+
+      // Create alarm
+      setTimeout(() => {
+        if (timezone) {
+          alarmResolved = new Date().toLocaleString("en-US", {timeZone: timezone});
+          alarmResolved += ' ' + timezone;
+        } else {
+          alarmResolved = new Date().toLocaleString("en-US")  + ' (' + SERVER_TIMEZONE + ')';
+        }
+        alarmMsg += ' Alarm finished time is ' + alarmResolved;
+        msg.reply(alarmMsg);
+      }, timeDiff);
+
+      // Update channel with alarm start
+      let alarmS = (timezone) ? alarm.toLocaleString("en-US", {timeZone: timezone}) : alarm.toLocaleString("en-US")  + ' (' + SERVER_TIMEZONE + ')';
+      let alarmCreateMsg = 'Alarm set for ' + alarmS;
+      msg.reply(alarmCreateMsg);
+    } catch(e) {
+      // Debug
+      console.log('Parser threw', e.message);
+      return msg.reply('I don\'t understand, tell me more 🤔');
+    }
   }
 });
 
