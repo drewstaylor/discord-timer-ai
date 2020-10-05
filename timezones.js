@@ -349,6 +349,4 @@ const Timezones = [
   'Africa/Johannesburg'
 ];
 
-module.exports = {
-  Timezones: Timezones
-};
+module.exports = Timezones;
