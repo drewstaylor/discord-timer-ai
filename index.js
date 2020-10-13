@@ -8,15 +8,15 @@ const SECONDS_TO_MILLISECONDS = 1000;
 
 const SERVER_TIMEZONE = String(String(new Date()).split("(")[1]).split(")")[0];
 
-const TimerHelp = `Usage:
+const TimerHelp = `**Usage:**
 \`\`\`
 !timer {dd:hh:mm:ss | hh:mm:ss} {timezone}
-
-duration: !timer command must include a duration in the format 'dd:hh:mm:ss', 'hh:mm:ss', 'mm:ss', '0s' or include the '--help' flag.
-
-timezone: An optional timezone to use for status updates of the alarm clock. Defaults to server time if no timezone option is present. For a full list of acceptable timezone options and formats see: https://github.com/drewstaylor/discord-timer-ai/blob/main/timezones.js
 \`\`\`
-Example usage:
+\`duration\`: _\`!timer\` command must include a duration in the format \`dd:hh:mm:ss\`, \`hh:mm:ss\`, \`mm:ss\`, \`0s\` or include the \`--help\` flag._
+
+\`timezone\`: _An optional timezone to use for status updates of the alarm clock. Defaults to server time if no timezone option is present (for a full list of acceptable timezone options and formats see: https://github.com/drewstaylor/discord-timer-ai/blob/main/timezones.js)_
+
+**Example:**
 
 > RichGirlOnLSD Today at 8:18 PM
 > !timer 00:01:30 Europe/Vienna
@@ -25,7 +25,31 @@ Example usage:
 > @RichGirlOnLSD, New timer started at 10/5/2020, 2:18:24 AM Europe/Vienna, for a duration of 0 hours, 1 minutes and 30 seconds.
 > @RichGirlOnLSD, Timer finished finished in 0 hours, 1 minutes and 30 seconds. Alarm finished time is 10/5/2020, 2:19:54 AM Europe/Vienna`;
 
-const AlarmHelp = ``;
+const AlarmHelp = `**Usage:**
+\`\`\`
+!alarm {date} {timezone}
+\`\`\`
+\`date\`: *Must be either a date string or timestamp in milliseconds. If a string formatted date is used, timezone must be declared like \`--timezone=America/New_York\`, unix timestamps timezone can be declared as either \`--timezone=America/New_York\` or \`America/New_York\`*
+
+\`timezone\`: _An optional timezone to use for status updates of the alarm clock. Defaults to server time if no timezone option is present (for a full list of acceptable timezone options and formats see: https://github.com/drewstaylor/discord-timer-ai/blob/main/timezones.js)_
+
+**Example 1) Date string:**
+
+> RichGirlOnLSD Today at 10:27 PM
+> !alarm Sun Oct 04 2020 22:28:00 --timezone=Europe/Moscow
+
+> Timer AI BOT Today at 10:27 PM
+> Alarm set for 10/5/2020, 5:28:00 AM
+> Alarm finished in 0 hours, 0 minutes and 1.06 seconds. Alarm finished time is 10/5/2020, 5:28:00 AM Europe/Moscow
+
+**Example 2) Timestamp:**
+
+> RichGirlOnLSD Today at 10:34 PM
+> !alarm 1601865279069
+
+> Timer AI BOT Today at 10:34 PM
+> Alarm set for 10/4/2020, 10:34:39 PM (Eastern Daylight Time)
+> Alarm finished in 0 hours, 0 minutes and 19.41 seconds. Alarm finished time is 10/4/2020, 10:34:39 PM (Eastern Daylight Time)`;
 
 // Config parser
 let config;
@@ -229,7 +253,24 @@ client.on('message', msg => {
       }
       
       // Alarm date
-      alarm = new Date(msgPieces[1]);
+      // Handle timezone offset
+      if (timezone) {
+        let options = {
+          timeZone: timezone,
+          year: 'numeric',
+          month: 'numeric',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: 'numeric',
+          second: 'numeric',
+        },
+        formatter = new Intl.DateTimeFormat([], options);
+        let alarmS = formatter.format(new Date(msgPieces[1]));
+        console.log(alarmS);
+        alarm = new Date(alarmS);
+      } else {
+        alarm = new Date(msgPieces[1]);
+      }
       
       // Start / end ref.
       timer = {
@@ -268,7 +309,7 @@ client.on('message', msg => {
       }, timeDiff);
 
       // Update channel with alarm start
-      let alarmS = (timezone) ? alarm.toLocaleString("en-US", {timeZone: timezone}) : alarm.toLocaleString("en-US")  + ' (' + SERVER_TIMEZONE + ')';
+      let alarmS = (timezone) ? alarm.toLocaleString() : alarm.toLocaleString("en-US")  + ' (' + SERVER_TIMEZONE + ')';
       let alarmCreateMsg = 'Alarm set for ' + alarmS;
       msg.reply(alarmCreateMsg);
     } catch(e) {
