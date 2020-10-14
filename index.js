@@ -220,57 +220,41 @@ client.on('message', msg => {
       return msg.reply(helpReply);
     }
     
-    let msgPieces = msg.content.split(' '),
+    let msgPieces = [],
         alarm,
         timer,
         timeDiff;
-
-    if (msgPieces.length < 2) {
-      return msg.reply('I don\'t understand, tell me more 🤔');
-    }
     
     // Parse user args
-    if (msgPieces.length === 3) { 
-      timezone = msgPieces[2];
-      if (Timezones.indexOf(timezone) < 0) {
-        let tzUrl = "https://gist.github.com/drewstaylor/ded816531ca8632062e1fb93b30a270b";
-        return msg.reply('What a strange timezone you live in, I don\'t understand ' + timezone + ' 🤔. See ' + tzUrl + ' for a list of supported timezones.');
+    let al;
+    if (msg.content.indexOf('--timezone=') > -1) {
+      let tz = msg.content.split('--timezone=');
+      timezone = tz[1].trim();
+      al = tz[0].trim();
+      if (al.indexOf('!alarm') > -1) {
+        al = al.split('!alarm');
+        if (al.length > 1) {
+          al = al[1].trim();
+          msgPieces.push(al)
+        }
       }
     } else {
-      if (msg.content.indexOf('--timezone=') > -1) {
-        let tz = msg.content.split('--timezone=');
-        timezone = tz[1].trim();
-        msgPieces[1] = tz[0].trim();
-      } else {
-        timezone = false;
+      al = msg.content.split('!alarm');
+      if (al.length > 1) {
+        al = al[1].trim();
+        msgPieces.push(al)
       }
+      timezone = false;
     }
 
     // Parse args
     try {
-      if (!isNaN(msgPieces[1])) {
-        msgPieces[1] = parseInt(msgPieces[1]);
+      if (!isNaN(msgPieces[0])) {
+        msgPieces[0] = parseInt(msgPieces[0]);
       }
       
       // Alarm date
-      // Handle timezone offset
-      if (timezone) {
-        let options = {
-          timeZone: timezone,
-          year: 'numeric',
-          month: 'numeric',
-          day: 'numeric',
-          hour: 'numeric',
-          minute: 'numeric',
-          second: 'numeric',
-        },
-        formatter = new Intl.DateTimeFormat([], options);
-        let alarmS = formatter.format(new Date(msgPieces[1]));
-        console.log(alarmS);
-        alarm = new Date(alarmS);
-      } else {
-        alarm = new Date(msgPieces[1]);
-      }
+      alarm = new Date(msgPieces[0]);
       
       // Start / end ref.
       timer = {
