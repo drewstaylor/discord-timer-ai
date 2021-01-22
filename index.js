@@ -302,6 +302,69 @@ client.on('message', msg => {
       return msg.reply('I don\'t understand, tell me more 🤔');
     }
   }
+
+  if (msg.content.substring(0,5) === '!flip') {
+    let opts = msg.content.split('--cast='), range, choice, Heads = 0, Tails = 0, m = '';
+    if (opts.length !== 2) {
+      range = 1;
+      choice = true;
+      let flip = Math.random() >= 0.5;
+      if (flip) {
+        ++Heads;
+        m = "You're ecstatic! You win the judgement with " + Heads + " head casts to " + Tails + " tail casts";
+      } else {
+        ++Tails;
+        m = "Not your day, friend. Judgement lost with " + Heads + " head casts to " + Tails + " tail casts";
+      }
+      return msg.reply(m);
+    } else {
+      choice = opts[1].split(',');
+      range = parseInt(choice[1]);
+      if (!range) {
+        range = 1;
+      }
+      if (isNaN(range)) {
+        range = 1;
+      }
+      choice = (choice[0].toLowerCase() == 'heads') ? true : false;
+      for (let i = 0; i < range; i++) {
+        let flip = Math.random() >= 0.5;
+        switch (flip) {
+          case true: {
+            ++Heads;
+            break;
+          }
+          case false: {
+            ++Tails;
+            break;
+          }
+        }
+        if (i == (range - 1)) {
+          if (Heads == Tails) {
+            m = "You appear to have pulled off a stalemate, you're safe for now. Judgement tied with " + Heads + " head casts to " + Tails + " tail casts";
+            return msg.reply(m);
+          }
+          if (Heads > Tails) {
+            if (choice) {
+              m = "You got lucky today, count your blessings. You win the judgement with " + Heads + " head casts to " + Tails + " tail casts";
+              return msg.reply(m);
+            } else {
+              m = "The universe laughs in your face. You lose judgement with " + Heads + " head casts to " + Tails + " tail casts";
+              return msg.reply(m);
+            }
+          } else {
+            if (!choice) {
+              m = "Your zeitgeist aligns with the stars. Judgement quietly passes with " + Heads + " head casts to " + Tails + " tail casts";
+              return msg.reply(m);
+            } else {
+              m = "Your spirit entangles with terror, you cannot escape. You lose judgement with " + Heads + " head casts to " + Tails + " tail casts";
+              return msg.reply(m);
+            } 
+          }
+        }
+      }
+    }
+  }
 });
 
 client.login(config.DISCORD_TOKEN);
